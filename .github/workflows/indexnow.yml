@@ -1,0 +1,29 @@
+name: IndexNow after Pages deployment
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+jobs:
+  notify:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Submit public website URLs to IndexNow
+        shell: bash
+        run: |
+          set -euo pipefail
+          key='78ec01d5757341338f473da949c70306'
+          base='https://amine-elmardi.github.io/Amine-Elmardi/'
+          actual=$(curl --fail --silent --show-error --max-time 30 "${base}${key}.txt")
+          test "$actual" = "$key"
+          payload=$(jq -n --arg key "$key" --arg base "$base" '{host:"amine-elmardi.github.io",key:$key,keyLocation:($base+$key+".txt"),urlList:[$base,($base+"de.html"),($base+"fr.html")]}')
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/indexnow-response -w '%{http_code}' -H 'Content-Type: application/json; charset=utf-8' --data "$payload" https://api.indexnow.org/indexnow)
+          echo "IndexNow HTTP status: $status"
+          case "$status" in
+            200|202) ;;
+            *) cat /tmp/indexnow-response; exit 1 ;;
+          esac

@@ -15,4 +15,4 @@ My professional interests include SAP solutions, business processes, digital tra
 
 ## Website
 
-[Visit my personal website](https://sites.google.com/view/amine-elmardi/startseite)
+[Visit my personal website](https://amine-elmardi.github.io/Amine-Elmardi/)

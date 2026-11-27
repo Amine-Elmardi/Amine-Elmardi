@@ -1,0 +1,30 @@
+name: Extend ticket search to every page
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/enable_ticket_search.py'
+      - 'docs/tickets/*.html'
+      - '.github/workflows/enable-ticket-search.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ticket-search-pages
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: python3 scripts/enable_ticket_search.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/tickets
+          if ! git diff --cached --quiet; then
+            git commit -m "Enable search on every support ticket page"
+            git push origin HEAD:main
+          fi
